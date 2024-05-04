@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { database, ref, push, onValue, remove } from "../Pages/firebase";
-import '../CSS/TiffinManagementSystem.css';
+import '../CSS/TiffinManagementSystem.css'; 
 
 const TiffinManagementSystem = () => {
   const [tiffins, setTiffins] = useState([]);
@@ -11,7 +11,7 @@ const TiffinManagementSystem = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const customersRef = ref(database, 'custam_info/custam');
+    const customersRef = ref(database, 'customers');
       
     onValue(customersRef, (snapshot) => {
       const customersData = snapshot.val();
@@ -46,6 +46,34 @@ const TiffinManagementSystem = () => {
     });
   }, []);
 
+  useEffect(() => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+
+    // Delete tiffins data of the last month on the 2nd day of every new month
+    if (currentDate.getDate() === 2) {
+      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const lastYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+      const lastMonthTiffinsRef = ref(database, 'tiffins');
+      const query = ref(lastMonthTiffinsRef, '').orderByChild('date').startAt(`${lastYear}-${String(lastMonth).padStart(2, '0')}-01`).endAt(`${lastYear}-${String(lastMonth).padStart(2, '0')}-31`);
+
+      onValue(query, (snapshot) => {
+        const tiffinsData = snapshot.val();
+        if (tiffinsData) {
+          for (let key in tiffinsData) {
+            remove(ref(database, `tiffins/${key}`)).then(() => {
+              console.log("Tiffins data of the last month deleted successfully!");
+            }).catch((error) => {
+              console.error("Error deleting tiffins data of the last month:", error);
+            });
+          }
+        }
+      });
+    }
+  }, []);
+
   const addTiffin = () => {
     if (!selectedCustomer || !date || !mealType) {
       alert('Please fill in all the fields');
@@ -69,7 +97,7 @@ const TiffinManagementSystem = () => {
   };
 
   const removeTiffin = (id) => {
-    const tiffinsRef = ref(database, `tiffins/${id}`); // Corrected string interpolation
+    const tiffinsRef = ref(database, `tiffins/${id}`);
       
     remove(tiffinsRef).then(() => {
       console.log("Tiffin removed successfully!");

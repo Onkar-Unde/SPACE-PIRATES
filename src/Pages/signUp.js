@@ -79,11 +79,11 @@ function SignUpForm() {
   };
 
   return (
-    <div className="container">
+    <div className="container bg">
       <h2>Sign Up</h2>
       <form onSubmit={signup}>
         <div className="form-group">
-          <label>Name:</label>
+          <label label1>Name:</label>
           <input
             type="text"
             value={name}
